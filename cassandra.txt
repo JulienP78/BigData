@@ -1,0 +1,70 @@
+ssh -p 2222 ubuntu@localhost
+sudo service cassandra start
+
+sudo apt-get install unzip
+wget http://rafaelangarita.github.io/files/datasets.zip
+unzip datasets.zip
+
+cqlsh
+
+CREATE KEYSPACE MovieLens
+   ... with replication = {'class':'SimpleStrategy','replication_factor':1};
+USE MovieLens;
+
+CREATE TABLE Users
+             ... (id int,
+             ... sex text,
+             ... age int,
+             ... occupation text,
+             ... zipcode int,
+             ... PRIMARY KEY (id));
+COPY Users(id, age, sex, occupation, zipcode) FROM 'datasets/users.csv';
+
+
+CREATE TABLE Movies
+             ... (id int,
+             ... title text,
+             ... date int,
+             ... PRIMARY KEY(id));
+
+COPY Movies(id, title, date) FROM 'datasets/movies.csv';
+
+CREATE TABLE Genres
+             ... (id int,
+             ... name text,
+             ... PRIMARY KEY (id));
+
+COPY Genres(name, id) FROM 'datasets/genres.csv';
+
+CREATE TABLE Mov_Genre
+             ... (movie_id int,
+             ... genre_id int,
+             ... PRIMARY KEY(genre_id,movie_id));
+
+
+COPY Mov_Genre(movie_id, genre_id) FROM 'datasets/mov_genre.csv';
+
+CREATE TABLE Friends
+             ... (user1_id int,
+             ... user2_id int,
+             ... PRIMARY KEY(user1_id,user2_id));
+
+COPY Friends(user1_id, user2_id) FROM 'datasets/friends.csv';
+
+CREATE TABLE Ratings
+             ... (user_id int,
+             ... movie_id int,
+             ... rating int,
+             ... timestamp int,
+             ... PRIMARY KEY(movie_id, user_id));
+
+COPY Ratings(user_id, movie_id, rating, timestamp) FROM 'datasets/ratings.csv';
+
+SELECT movie_id, AVG(rating) FROM Ratings GROUP BY movie_id;
+SELECT * FROM Mov_Genre;
+SELECT genre_id, COUNT(genre_id) FROM Mov_Genre GROUP BY genre_id;
+SELECT movie_id, rating FROM Ratings WHERE movie_id=232;
+SELECT user_id, movie_id, rating FROM Ratings WHERE user_id=96 ALLOW FILTERING;
+
+
+
