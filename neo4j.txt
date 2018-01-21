@@ -55,3 +55,12 @@ MATCH(n:User) RETURN count (distinct(n.occupation)) AS count
 
 MATCH(n:User)-[r:RATED]->(m) with avg (r.note) AS AVERAGE, m as movie where AVERAGE=5 RETURN movie.title, AVERAGE
 
+MATCH (n:User{id:1})-[:FRIEND_OF]->(ami:User)<-[:FRIEND_OF]-(amiDeAmi:User) RETURN ami.id,amiDeAmi.id
+
+MATCH (n:User)-[:FRIEND_OF*..2]->(ami:User{id:1}) RETURN n,ami
+
+MATCH (n:User) - [:RATED]->(m:Movie)<-[:RATED]-(:User{id:1}) RETURN n.id, count(n) ORDER BY count(n) DESC LIMIT 10
+
+MATCH (n:User)-[r:RATED]->(m:Movie)-[:CATEGORIZED_AS]->(g:Genre) where (n.id=1 and r.note=5) return MAX(distinct g.name);
+
+MATCH (m:Movie)-[:CATEGORIZED_AS]->(g:Genre) where g.name="Western" return distinct m.title;
