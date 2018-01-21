@@ -1,0 +1,57 @@
+MATCH (n)
+OPTIONAL MATCH (n)-[r]-()
+DELETE n,r
+
+USING PERIODIC COMMIT
+LOAD CSV WITH HEADERS FROM "http://puaud.eu/users.csv" AS users
+CREATE (u:User {id : toInt(users.id), sex : users.sex, age :
+toInt(users.age), occupation : users.occupation, zip_code :
+users.zip_code});
+
+USING PERIODIC COMMIT
+LOAD CSV WITH HEADERS FROM "http://puaud.eu/movies.csv" AS movies
+CREATE (m:Movie {id : toInt(movies.id), title : movies.title, date :
+toInt(movies.date)}); 
+
+USING PERIODIC COMMIT
+LOAD CSV WITH HEADERS FROM "http://puaud.eu/genres.csv" AS genres
+CREATE (u:Genre {id : toInt(genres.id), name : genres.name});
+
+USING PERIODIC COMMIT
+LOAD CSV WITH HEADERS FROM "http://puaud.eu/mov_genre.csv" AS mov_genre
+MERGE (m : Movie { id : toInt(mov_genre.mov_id) })
+MERGE (g : Genre { id : toInt(mov_genre.genre) })
+CREATE (m)-[:CATEGORIZED_AS]->(g);
+
+USING PERIODIC COMMIT
+LOAD CSV WITH HEADERS FROM "http://puaud.eu/ratings.csv" AS ratings
+MERGE (u : User { id : toInt(ratings.user_id) })
+MERGE (m : Movie { id : toInt(ratings.mov_id) })
+CREATE (u)-[:RATED { note : toInt(ratings.rating), timestamp : toInt(ratings.timestamp) } ]->(m);
+
+USING PERIODIC COMMIT
+LOAD CSV WITH HEADERS FROM "http://puaud.eu/friends.csv" AS friends
+MERGE (u1:User { id : toInt(friends.user1_id) })
+MERGE (u2:User { id : toInt(friends.user2_id) })
+CREATE (u1)-[:FRIEND_OF]->(u2); 
+
+MATCH (n:User) RETURN count(n)
+
+MATCH (n:User{id:1}) RETURN n.sex, n.age
+
+MATCH (n{occupation:"artist", sex:"F"}) RETURN n.id
+
+MATCH (n:User) WHERE (n.sex="F" and (n.occupation="artist" or n.occupation="writer")) RETURN n.id
+
+MATCH (n:User{occupation:"student"}) RETURN avg(n.age)
+
+MATCH(n:User) RETURN n.occupation, avg(n.age)
+
+MATCH(n:User) RETURN n.occupation, count(n)
+
+MATCH (n:User) RETURN n.occupation, count(n) AS count ORDER BY count DESC LIMIT 5
+
+MATCH(n:User) RETURN count (distinct(n.occupation)) AS count
+
+MATCH(n:User)-[r:RATED]->(m) with avg (r.note) AS AVERAGE, m as movie where AVERAGE=5 RETURN movie.title, AVERAGE
+
