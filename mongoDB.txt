@@ -1,0 +1,78 @@
+ssh -p 2222 ubuntu@localhost
+
+sudo mkdir /data
+sudo chmod 777 /data
+sudo mkdir /data/db
+sudo chmod  777 /data/db
+/usr/bin/mongod
+
+
+mongoimport --db MovieLens --collection movies --file movielens_movies.json
+mongoimport --db MovieLens --collection users --file movielens_users.json
+
+mongo
+
+use MovieLens
+
+db.movies.find()
+
+db.users.find()
+
+db.users.count()
+
+db.movies.count()
+
+db.users.find({name:"Clifford Johnathan"},{name:1, occupation:1, _id:0}) 
+
+db.users.count({age:{$gte:18, $lte:30}})
+
+db.users.count({$or:[{occupation:"artist"},{occupation:"scientist"}]})
+
+db.users.find({$and : [{occupation : "writer"}, {gender : "F"}]},{name:1,age:1,_id:0}).sort({age : -1}).limit(10)
+
+db.users.distinct("occupation")
+
+db.users.insert({_id:0, name:"Julien Perret", gender:"M", age:21, occupation:"student"})
+
+db.users.update({name:"Julien Perret"}, {$set:{movies:[{movieid:2, rating:5, timestamp:Math.round(new Date().getTime() / 1000)}]}})
+
+db.users.remove({name:"Julien Perret"})
+
+db.users.update({occupation:"programmer"},{$set:{occupation:"developer"}},{multi:true})
+
+db.movies.find().forEach(function(movie){ id = movie._id; title = movie.title; year = title.substring(title.length-5,title.length-1); title = title.substring(0, title.length-7); db.movies.update({"_id":id},{$set:{"title":title,"year":year}})});
+
+db.movies.find().forEach(function(movie){ movie.genres = movie.genres.split("|"); db.movies.save(movie)});
+
+db.users.find().forEach(function(user){ user.movies.forEach(function(movie){ movie.timestamp=new Date(movie.timestamp*1000);}); db.users.save(user);});
+
+db.users.find().forEach(function(user){ user.num_ratings = user.movies.length;db.users.save(user) });
+
+db.users.count({num_ratings:{$gt:90}})
+
+var count=0;
+var date= new ISODate("2001-01-01T00:00:00.000Z");
+db.users.find().forEach(function(user){ user.movies.forEach(function(movie){ if(movie.timestamp>date){ count++; } }); });
+print(count);
+
+db.users.aggregate( {$match:{name:"Jayson Brad"}}, {$unwind:'$movies'}, {$sort:{'movies.timestamp':-1}}, {$limit:3})
+
+db.users.aggregate( {$match:{name:"Tracy Edward"}}, {$unwind:'$movies'}, {$match:{'movies.movieid':1210}})
+
+db.users.aggregate( {$unwind:'$movies'}, {$match:{'movies.movieid':2194}}, {$match:{'movies.rating':5}}, {$count:"nombre d utilisateurs"})
+
+db.users.aggregate( [ {$match:{gender:'F'}}, {$unwind:'$movies'}, {$sort:{'movies.timestamp':-1}}, {$group:{_id:'$name'}}, {$limit:10}, {$project:{name:1}} ], {allowDiskUse: true} );
+
+db.users.createIndex({gender:1})
+
+db.users.createIndex({"movies.timestamp":1})
+
+db.users.find().forEach(function(user){ user.movies.forEach(function(movie){ movie.movieref = { "$ref":"movies", "$id":movie.movieid}; }); db.users.save(user); });
+
+db.movies.aggregate( {$match:{year:{$gte:"1980",$lte:"1989"}}}, {$group:{ _id:"$year", count:{$sum:1} }}, {$sort:{count:-1}})
+
+db.users.aggregate( {$unwind:'$movies'}, {$match:{'movies.movieid':296}}, {$group:{ _id:"$movies.movieid", noteMoyenne:{$avg:'$movies.rating'}}})
+
+db.users.aggregate( {$unwind:'$movies'}, {$group:{ _id:{id:"$_id",name:"$name"}, max:{$max:'$movies.rating'}, min:{$min:'$movies.rating'}, mean:{$avg:'$movies.rating'} }}, {$sort:{mean:1}} )
+
+db.users.aggregate( {$unwind:"$movies"}, {$group:{ _id:{$month:"$movies.timestamp"}, nombreDeVotes:{$sum:1}}}, {$sort:{nombreDeVotes:-1}},{$limit:1})

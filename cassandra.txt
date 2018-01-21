@@ -66,5 +66,12 @@ SELECT genre_id, COUNT(genre_id) FROM Mov_Genre GROUP BY genre_id;
 SELECT movie_id, rating FROM Ratings WHERE movie_id=232;
 SELECT user_id, movie_id, rating FROM Ratings WHERE user_id=96 ALLOW FILTERING;
 
+SELECT user_id, count(*) AS counter FROM Ratings GROUP BY user_id ORDER BY counter DESC LIMIT 10
 
+SELECT movie_id, count(*) AS counter FROM Ratings GROUP BY movie_id ORDER BY counter DESC LIMIT 1
 
+SELECT DISTINCT(movie_id) FROM Ratings WHERE rating=5
+
+SELECT movie_id, AVG(rating) FROM Ratings GROUP BY movie_id ORDER BY AVG(rating) DESC LIMIT 1
+
+SELECT movie_id, AVG(rating) FROM Ratings GROUP BY movie_id ORDER BY AVG(rating) DESC LIMIT 5
